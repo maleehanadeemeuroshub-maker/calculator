@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232a2447%22/><text x=%2250%22 y=%2265%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22%2334d399%22 font-family=%22Arial%22>=</text></svg>">
+
+<!-- Tailwind CSS (utility-first framework) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  /* ============================================
+     CUSTOM CSS — Animations, Transitions, Transform
+     ============================================ */
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #241b3f, #0b0b16 70%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .app-shell { animation: fadeSlideIn 0.6s ease-out; }
+
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0px rgba(167, 139, 250, 0.0); }
+    50%      { box-shadow: 0 0 22px rgba(167, 139, 250, 0.30); }
+  }
+  .display-glow { animation: glowPulse 3s ease-in-out infinite; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .shake { animation: shake 0.4s ease-in-out; }
+
+  .calc-btn {
+    transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  }
+  .calc-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .calc-btn:active { transform: scale(0.93); }
+
+  .mode-toggle-thumb {
+    transition: transform 0.25s ease;
+  }
+  .mode-toggle.rad .mode-toggle-thumb {
+    transform: translateX(100%);
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .history-item { animation: slideInRight 0.3s ease-out; }
+
+  /* ============================================
+     MEDIA QUERIES — Responsive Design
+     ============================================ */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 480px) {
+    .calc-btn { font-size: 14px; padding: 9px 0; }
+    .display-current { font-size: 26px; }
+    .grid { gap: 6px !important; }
+  }
+
+  @media (max-width: 360px) {
+    .calc-btn { font-size: 12px; padding: 7px 0; }
+    .display-current { font-size: 22px; }
+  }
+</style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+
+<div class="w-full max-w-4xl">
+
+  <header class="text-center mb-4 sm:mb-6">
+    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-wide">Ultimate Calculator</h1>
+    <p class="text-xs sm:text-sm text-slate-400 mt-1">Scientific engine · Quick-calc form · Live history</p>
+  </header>
+
+  <main class="app-shell flex flex-col md:flex-row gap-5 items-start justify-center">
+
+    <!-- ============================================
+         CALCULATOR SECTION (Flexbox + Grid)
+         ============================================ -->
+    <section aria-label="Calculator" class="bg-[#1a1530]/90 backdrop-blur rounded-2xl p-3 sm:p-5 shadow-2xl w-full max-w-[380px] mx-auto md:mx-0 md:w-[380px] flex flex-col gap-3 sm:gap-4 border border-white/5">
+
+      <!-- Angle mode toggle -->
+      <div class="flex justify-end gap-2">
+        <button id="degBtn" type="button" data-mode="deg"
+          class="mode-btn px-4 py-1.5 rounded-full text-xs font-bold border-2 border-violet-400 bg-violet-500 text-white">DEG</button>
+        <button id="radBtn" type="button" data-mode="rad"
+          class="mode-btn px-4 py-1.5 rounded-full text-xs font-bold border-2 border-white/10 bg-[#0f0c1e] text-slate-500">RAD</button>
+      </div>
+
+      <!-- Display -->
+      <div class="display-glow bg-[#0f0c1e] rounded-xl p-4 text-right border border-white/5 relative">
+        <span id="memoryIndicator" class="absolute top-2 left-3 text-xs font-bold text-fuchsia-400 hidden">M</span>
+        <div id="previousText" class="text-sm text-slate-500 min-h-[18px]"></div>
+        <div id="currentText" class="display-current text-3xl font-semibold text-white break-all">0</div>
+      </div>
+
+      <!-- Button Grid (CSS Grid, 6 cols, rows auto-grow) -->
+      <div class="grid grid-cols-6 gap-2">
+        <!-- Row 1: scientific -->
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="sin">sin</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="cos">cos</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="tan">tan</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="log">log</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="ln">ln</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="sqrt">&radic;</button>
+
+        <!-- Row 2: scientific -->
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="pow2">x&sup2;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-operator="^">x^y</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="fact">x!</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="inv">1/x</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-const="pi">&pi;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-const="e">e</button>
+
+        <!-- Row 3: inverse trig + hyperbolic (NEW) -->
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="asin">sin&#8315;&sup1;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="acos">cos&#8315;&sup1;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="atan">tan&#8315;&sup1;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="sinh">sinh</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="cosh">cosh</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="tanh">tanh</button>
+
+        <!-- Row 4: mod, exp notation, ans, sign toggle, nth root, random (NEW) -->
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-operator="%">mod</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="exp">EXP</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-action="ans">Ans</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-action="negate">+/&minus;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="nthroot">&#8319;&radic;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="rand">Rnd</button>
+
+        <!-- Row 5: memory + copy/paste (NEW) -->
+        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mc">MC</button>
+        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mr">MR</button>
+        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mplus">M+</button>
+        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mminus">M&minus;</button>
+        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="copy">Copy</button>
+        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="paste">Paste</button>
+
+        <!-- Row 6: controls -->
+        <button class="calc-btn bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold" data-action="clear">AC</button>
+        <button class="calc-btn bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold" data-action="delete">DEL</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-paren="(">(</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-paren=")">)</button>
+        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="/">&divide;</button>
+        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="*">&times;</button>
+
+        <!-- Row 4-5: numbers + equals (equals spans 2 rows, col 6) -->
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="7">7</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="8">8</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="9">9</button>
+        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="-">&minus;</button>
+        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="percent">%</button>
+        <button class="calc-btn row-span-2 bg-teal-400 hover:bg-teal-300 text-slate-900 font-bold rounded-lg text-xl" data-action="equals">=</button>
+
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="4">4</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="5">5</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="6">6</button>
+        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="+">+</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number=".">.</button>
+
+        <!-- Row 6: final numbers, 0 spans remaining 3 cols -->
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="1">1</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="2">2</button>
+        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="3">3</button>
+        <button class="calc-btn col-span-3 bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="0">0</button>
+      </div>
+
+      <!-- ============================================
+           FORM + VALIDATION
+           ============================================ -->
+      <form id="quickForm" novalidate class="flex flex-col gap-1 pt-2 border-t border-white/10">
+        <label for="quickInput" class="text-xs text-slate-400">Quick calc (type an expression &amp; press Enter)</label>
+        <input
+          id="quickInput"
+          type="text"
+          required
+          pattern="^[0-9+\-*/().%\s]+$"
+          placeholder="e.g. (12+8)/4"
+          class="bg-[#0f0c1e] text-white rounded-lg px-3 py-2 text-base outline-none border border-white/10 focus:border-violet-400"
+        />
+        <span id="formError" class="text-xs text-rose-400 hidden">Only numbers and + − × ÷ % ( ) are allowed.</span>
+      </form>
+    </section>
+
+    <!-- ============================================
+         HISTORY SECTION
+         ============================================ -->
+    <section aria-label="Calculation history" class="history-panel bg-[#1a1530]/90 backdrop-blur rounded-2xl p-3 sm:p-5 shadow-2xl w-full max-w-[380px] mx-auto md:mx-0 md:w-[280px] flex flex-col gap-3 max-h-[220px] md:max-h-[520px] border border-white/5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-white font-semibold text-sm">History</h2>
+        <button id="clearHistoryBtn" type="button" class="text-xs text-rose-400 hover:text-rose-300">Clear</button>
+      </div>
+      <ul id="historyList" class="flex flex-col gap-2 overflow-y-auto pr-1 text-sm">
+        <li class="text-slate-500 text-xs italic" id="emptyHistoryMsg">No calculations yet.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="text-center mt-6 text-xs text-slate-500">
+    Built with semantic HTML, Flexbox + Grid, responsive media queries, CSS animations, Tailwind, and vanilla JavaScript.
+  </footer>
+
+</div>
+
+<script>
+  /* ================================================================
+     JAVASCRIPT — Variables, Data Types, Loops, Functions,
+                  Arrays, Objects, DOM Manipulation
+     ================================================================ */
+
+  const state = {
+    expression: '',
+    angleMode: 'deg',
+    history: [],
+    memory: 0,
+    lastAnswer: 0
+  };
+
+  const MAX_HISTORY = 20;
+
+  const currentText     = document.getElementById('currentText');
+  const previousText    = document.getElementById('previousText');
+  const historyList     = document.getElementById('historyList');
+  const emptyMsg        = document.getElementById('emptyHistoryMsg');
+  const degBtn          = document.getElementById('degBtn');
+  const radBtn          = document.getElementById('radBtn');
+  const quickForm       = document.getElementById('quickForm');
+  const quickInput      = document.getElementById('quickInput');
+  const formError       = document.getElementById('formError');
+  const clearHistBtn    = document.getElementById('clearHistoryBtn');
+  const memoryIndicator = document.getElementById('memoryIndicator');
+
+  const calcButtons = document.querySelectorAll(
+    '.calc-btn[data-number], .calc-btn[data-operator], .calc-btn[data-func], .calc-btn[data-action], .calc-btn[data-paren], .calc-btn[data-const]'
+  );
+
+  function formatForDisplay(expr) {
+    return expr
+      .replace(/Math\.asin\(/g, 'sin⁻¹(')
+      .replace(/Math\.acos\(/g, 'cos⁻¹(')
+      .replace(/Math\.atan\(/g, 'tan⁻¹(')
+      .replace(/Math\.sinh\(/g, 'sinh(')
+      .replace(/Math\.cosh\(/g, 'cosh(')
+      .replace(/Math\.tanh\(/g, 'tanh(')
+      .replace(/Math\.sin\(/g, 'sin(')
+      .replace(/Math\.cos\(/g, 'cos(')
+      .replace(/Math\.tan\(/g, 'tan(')
+      .replace(/Math\.log10\(/g, 'log(')
+      .replace(/Math\.log\(/g, 'ln(')
+      .replace(/Math\.sqrt\(/g, '√(')
+      .replace(/Math\.PI/g, 'π')
+      .replace(/Math\.E/g, 'e')
+      .replace(/\*\*/g, '^');
+  }
+
+  function updateDisplay() {
+    currentText.textContent = state.expression === '' ? '0' : formatForDisplay(state.expression);
+  }
+
+  function appendToExpression(value) { state.expression += value; }
+  function inputNumber(digit) { appendToExpression(digit); }
+  function inputOperator(op) { appendToExpression(op === '^' ? '**' : op); }
+  function inputParen(p) { appendToExpression(p); }
+  function inputConst(name) { appendToExpression(name === 'pi' ? 'Math.PI' : 'Math.E'); }
+
+  function angleWrap(fnCall) {
+    if (state.angleMode === 'deg') {
+      return fnCall.replace('(', '((Math.PI/180)*');
+    }
+    return fnCall;
+  }
+
+  // Inverse trig functions (asin/acos/atan) return radians natively —
+  // convert the OUTPUT to degrees by prefixing a (180/PI)* multiplier.
+  function angleWrapInverse(fnCall) {
+    if (state.angleMode === 'deg') {
+      return '(180/Math.PI)*' + fnCall;
+    }
+    return fnCall;
+  }
+
+  function inputFunc(fn) {
+    switch (fn) {
+      case 'sin':     appendToExpression(angleWrap('Math.sin(')); break;
+      case 'cos':     appendToExpression(angleWrap('Math.cos(')); break;
+      case 'tan':     appendToExpression(angleWrap('Math.tan(')); break;
+      case 'asin':    appendToExpression(angleWrapInverse('Math.asin(')); break;
+      case 'acos':    appendToExpression(angleWrapInverse('Math.acos(')); break;
+      case 'atan':    appendToExpression(angleWrapInverse('Math.atan(')); break;
+      case 'sinh':    appendToExpression('Math.sinh('); break;
+      case 'cosh':    appendToExpression('Math.cosh('); break;
+      case 'tanh':    appendToExpression('Math.tanh('); break;
+      case 'log':     appendToExpression('Math.log10('); break;
+      case 'ln':      appendToExpression('Math.log('); break;
+      case 'sqrt':    appendToExpression('Math.sqrt('); break;
+      case 'nthroot': appendToExpression('**(1/'); break;
+      case 'exp':     appendToExpression('e'); break;
+      case 'rand':    appendToExpression(Math.random().toFixed(6).toString()); break;
+      case 'pow2':    appendToExpression('**2'); break;
+      case 'inv':     appendToExpression('**-1'); break;
+      case 'percent': appendToExpression('/100'); break;
+      case 'fact':    appendToExpression('!'); break;
+    }
+  }
+
+  function factorial(n) {
+    if (n < 0 || !Number.isInteger(n)) return NaN;
+    let result = 1;
+    for (let i = 2; i <= n; i++) result *= i;
+    return result;
+  }
+
+  function resolveFactorials(expr) {
+    return expr.replace(/(\d+(\.\d+)?)!/g, (match, num) => `factorial(${num})`);
+  }
+
+  function addToHistory(expr, result) {
+    const entry = {
+      expression: formatForDisplay(expr),
+      result: result,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    state.history.unshift(entry);
+    if (state.history.length > MAX_HISTORY) state.history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    historyList.innerHTML = '';
+    if (state.history.length === 0) {
+      historyList.appendChild(emptyMsg);
+      return;
+    }
+    for (const entry of state.history) {
+      const li = document.createElement('li');
+      li.className = 'history-item bg-[#0f0c1e] rounded-lg px-3 py-2 border border-white/5';
+      li.innerHTML = `
+        <div class="text-slate-400 text-xs">${entry.expression} =</div>
+        <div class="text-white font-semibold">${entry.result}</div>
+        <div class="text-slate-600 text-[10px] mt-1">${entry.timestamp}</div>
+      `;
+      historyList.appendChild(li);
+    }
+  }
+
+  function clearHistory() {
+    state.history = [];
+    renderHistory();
+  }
+
+  function calculate() {
+    if (state.expression === '') return;
+    try {
+      const cleanExpr = resolveFactorials(state.expression);
+      const result = Function('factorial', `"use strict"; return (${cleanExpr})`)(factorial);
+      if (!Number.isFinite(result)) throw new Error('Invalid result');
+      const finalResult = parseFloat(result.toFixed(10)).toString();
+      previousText.textContent = formatForDisplay(state.expression) + ' =';
+      addToHistory(state.expression, finalResult);
+      state.expression = finalResult;
+      state.lastAnswer = parseFloat(finalResult);
+    } catch (err) {
+      state.expression = 'Error';
+    }
+  }
+
+  // Returns the numeric value of the current expression without
+  // mutating state — used by M+ / M- so they don't clear the display.
+  function getCurrentValue() {
+    if (state.expression === '' || state.expression === 'Error') return 0;
+    try {
+      const cleanExpr = resolveFactorials(state.expression);
+      const result = Function('factorial', `"use strict"; return (${cleanExpr})`)(factorial);
+      return Number.isFinite(result) ? result : 0;
+    } catch (err) {
+      return 0;
+    }
+  }
+
+  function updateMemoryIndicator() {
+    memoryIndicator.classList.toggle('hidden', state.memory === 0);
+  }
+
+  function memoryClear() { state.memory = 0; updateMemoryIndicator(); }
+  function memoryAdd()   { state.memory += getCurrentValue(); updateMemoryIndicator(); }
+  function memorySub()   { state.memory -= getCurrentValue(); updateMemoryIndicator(); }
+  function memoryRecall(){ appendToExpression(state.memory.toString()); }
+
+  function insertAns() { appendToExpression(state.lastAnswer.toString()); }
+
+  // Toggles the sign of the last-typed number in the expression.
+  function negate() {
+    const match = state.expression.match(/(-?\d+\.?\d*)$/);
+    if (!match) return;
+    const numStr = match[1];
+    const before = state.expression.slice(0, state.expression.length - numStr.length);
+    const toggled = numStr.startsWith('-') ? numStr.slice(1) : '-' + numStr;
+    state.expression = before + '(' + toggled + ')';
+  }
+
+  function copyResult() {
+    const text = currentText.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+  }
+
+  function pasteValue() {
+    if (!navigator.clipboard || !navigator.clipboard.readText) return;
+    navigator.clipboard.readText().then(text => {
+      const val = text.trim();
+      if (/^-?\d+(\.\d+)?$/.test(val)) {
+        appendToExpression(val);
+        updateDisplay();
+      }
+    }).catch(() => {});
+  }
+
+  function clearAll() {
+    state.expression = '';
+    previousText.textContent = '';
+  }
+
+  function deleteLast() {
+    if (state.expression === 'Error') {
+      state.expression = '';
+      return;
+    }
+    const funcTokens = [
+      'Math.asin(', 'Math.acos(', 'Math.atan(', 'Math.sinh(', 'Math.cosh(', 'Math.tanh(',
+      'Math.sin(', 'Math.cos(', 'Math.tan(', 'Math.log10(', 'Math.log(',
+      'Math.sqrt(', '(180/Math.PI)*', '(Math.PI/180)*', 'Math.PI', 'Math.E',
+      '**(1/', '**-1', '**2', '**'
+    ];
+    let removed = false;
+    for (let i = 0; i < funcTokens.length; i++) {
+      const token = funcTokens[i];
+      if (state.expression.endsWith(token)) {
+        state.expression = state.expression.slice(0, -token.length);
+        removed = true;
+        break;
+      }
+    }
+    if (!removed) state.expression = state.expression.slice(0, -1);
+  }
+
+  // FIXED: fully swaps className on both buttons, so the active/inactive
+  // state is always unambiguous — no partial class toggling to go wrong.
+  const ACTIVE_CLASSES   = 'mode-btn px-4 py-1.5 rounded-full text-xs font-bold border-2 border-violet-400 bg-violet-500 text-white';
+  const INACTIVE_CLASSES = 'mode-btn px-4 py-1.5 rounded-full text-xs font-bold border-2 border-white/10 bg-[#0f0c1e] text-slate-500';
+
+  function setAngleMode(mode) {
+    state.angleMode = mode;
+
+    if (mode === 'rad') {
+      radBtn.className = ACTIVE_CLASSES;
+      degBtn.className = INACTIVE_CLASSES;
+    } else {
+      degBtn.className = ACTIVE_CLASSES;
+      radBtn.className = INACTIVE_CLASSES;
+    }
+  }
+
+  calcButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const { number, operator, func, action, paren, const: constName } = button.dataset;
+      if (number !== undefined) inputNumber(number);
+      else if (operator !== undefined) inputOperator(operator);
+      else if (func !== undefined) inputFunc(func);
+      else if (paren !== undefined) inputParen(paren);
+      else if (constName !== undefined) inputConst(constName);
+      else if (action === 'equals') calculate();
+      else if (action === 'clear') clearAll();
+      else if (action === 'delete') deleteLast();
+      else if (action === 'ans') insertAns();
+      else if (action === 'negate') negate();
+      else if (action === 'mc') memoryClear();
+      else if (action === 'mr') memoryRecall();
+      else if (action === 'mplus') memoryAdd();
+      else if (action === 'mminus') memorySub();
+      else if (action === 'copy') copyResult();
+      else if (action === 'paste') pasteValue();
+      updateDisplay();
+    });
+  });
+
+  degBtn.addEventListener('click', () => setAngleMode('deg'));
+  radBtn.addEventListener('click', () => setAngleMode('rad'));
+
+  clearHistBtn.addEventListener('click', clearHistory);
+
+  quickForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = quickInput.value.trim();
+    const isValid = quickInput.checkValidity() && value.length > 0;
+    if (!isValid) {
+      formError.classList.remove('hidden');
+      quickInput.classList.add('shake');
+      setTimeout(() => quickInput.classList.remove('shake'), 400);
+      return;
+    }
+    formError.classList.add('hidden');
+    state.expression = value;
+    calculate();
+    updateDisplay();
+    quickInput.value = '';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement === quickInput) return;
+    if (e.key >= '0' && e.key <= '9') inputNumber(e.key);
+    else if (e.key === '.') inputNumber('.');
+    else if (['+', '-', '*', '/'].includes(e.key)) inputOperator(e.key);
+    else if (e.key === '(' || e.key === ')') inputParen(e.key);
+    else if (e.key === 'Enter' || e.key === '=') calculate();
+    else if (e.key === 'Backspace') deleteLast();
+    else if (e.key === 'Escape') clearAll();
+    updateDisplay();
+  });
+
+  updateDisplay();
+  renderHistory();
+  setAngleMode('deg');
+</script>
+
+</body>
+</html>
