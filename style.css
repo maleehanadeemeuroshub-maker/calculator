@@ -1,0 +1,68 @@
+/* ============================================
+     CUSTOM CSS — Animations, Transitions, Transform
+     ============================================ */
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background: radial-gradient(circle at top, #241b3f, #0b0b16 70%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .app-shell { animation: fadeSlideIn 0.6s ease-out; }
+
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0px rgba(167, 139, 250, 0.0); }
+    50%      { box-shadow: 0 0 22px rgba(167, 139, 250, 0.30); }
+  }
+  .display-glow { animation: glowPulse 3s ease-in-out infinite; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .shake { animation: shake 0.4s ease-in-out; }
+
+  .calc-btn {
+    transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  }
+  .calc-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .calc-btn:active { transform: scale(0.93); }
+
+  .mode-toggle-thumb {
+    transition: transform 0.25s ease;
+  }
+  .mode-toggle.rad .mode-toggle-thumb {
+    transform: translateX(100%);
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .history-item { animation: slideInRight 0.3s ease-out; }
+
+  /* ============================================
+     MEDIA QUERIES — Responsive Design
+     ============================================ */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 480px) {
+    .calc-btn { font-size: 14px; padding: 9px 0; }
+    .display-current { font-size: 26px; }
+    .grid { gap: 6px !important; }
+  }
+
+  @media (max-width: 360px) {
+    .calc-btn { font-size: 12px; padding: 7px 0; }
+    .display-current { font-size: 22px; }
+  }
