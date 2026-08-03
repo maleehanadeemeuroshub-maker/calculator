@@ -23,6 +23,8 @@
   const quickInput      = document.getElementById('quickInput');
   const formError       = document.getElementById('formError');
   const clearHistBtn    = document.getElementById('clearHistoryBtn');
+  const equalsBtn       = document.getElementById('equalsBtn');
+  const displayBox      = document.querySelector('.display-glow');
   const memoryIndicator = document.getElementById('memoryIndicator');
 
   const calcButtons = document.querySelectorAll(
@@ -50,6 +52,15 @@
 
   function updateDisplay() {
     currentText.textContent = state.expression === '' ? '0' : formatForDisplay(state.expression);
+    currentText.classList.remove('digit-pop');
+    void currentText.offsetWidth; // restart animation
+    currentText.classList.add('digit-pop');
+
+    if (state.expression === 'Error') {
+      displayBox.classList.remove('shake');
+      void displayBox.offsetWidth;
+      displayBox.classList.add('shake');
+    }
   }
 
   function appendToExpression(value) { state.expression += value; }
@@ -57,6 +68,45 @@
   function inputOperator(op) { appendToExpression(op === '^' ? '**' : op); }
   function inputParen(p) { appendToExpression(p); }
   function inputConst(name) { appendToExpression(name === 'pi' ? 'Math.PI' : 'Math.E'); }
+
+  // Material-style click ripple from the exact pointer position.
+  function spawnRipple(evt, btn) {
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    const x = (evt.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2;
+    const y = (evt.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2;
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+  }
+
+  // Little sparkle particles bursting out of the equals button on success.
+  function burstSparkles(btn) {
+    const rect = btn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const symbols = ['✦', '✧', '✨'];
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('span');
+      p.className = 'spark-particle';
+      p.textContent = symbols[i % symbols.length];
+      const angle = (Math.PI * 2 * i) / 8;
+      const dist = 45 + Math.random() * 20;
+      p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      p.style.left = centerX + 'px';
+      p.style.top = centerY + 'px';
+      document.body.appendChild(p);
+      p.addEventListener('animationend', () => p.remove());
+    }
+    btn.classList.remove('equals-burst');
+    void btn.offsetWidth;
+    btn.classList.add('equals-burst');
+  }
 
   function angleWrap(fnCall) {
     if (state.angleMode === 'deg') {
@@ -154,6 +204,7 @@
       addToHistory(state.expression, finalResult);
       state.expression = finalResult;
       state.lastAnswer = parseFloat(finalResult);
+      burstSparkles(equalsBtn);
     } catch (err) {
       state.expression = 'Error';
     }
@@ -241,8 +292,8 @@
 
   // FIXED: fully swaps className on both buttons, so the active/inactive
   // state is always unambiguous — no partial class toggling to go wrong.
-  const ACTIVE_CLASSES   = 'mode-btn px-4 py-1.5 rounded-full text-xs font-bold border-2 border-violet-400 bg-violet-500 text-white';
-  const INACTIVE_CLASSES = 'mode-btn px-4 py-1.5 rounded-full text-xs font-bold border-2 border-white/10 bg-[#0f0c1e] text-slate-500';
+  const ACTIVE_CLASSES   = 'mode-btn relative overflow-hidden px-4 py-1.5 rounded-full text-xs font-bold border-2 border-violet-400 bg-violet-500 text-white';
+  const INACTIVE_CLASSES = 'mode-btn relative overflow-hidden px-4 py-1.5 rounded-full text-xs font-bold border-2 border-white/10 bg-[#0f0c1e] text-slate-500';
 
   function setAngleMode(mode) {
     state.angleMode = mode;
@@ -257,7 +308,8 @@
   }
 
   calcButtons.forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', (evt) => {
+      spawnRipple(evt, button);
       const { number, operator, func, action, paren, const: constName } = button.dataset;
       if (number !== undefined) inputNumber(number);
       else if (operator !== undefined) inputOperator(operator);
@@ -279,8 +331,8 @@
     });
   });
 
-  degBtn.addEventListener('click', () => setAngleMode('deg'));
-  radBtn.addEventListener('click', () => setAngleMode('rad'));
+  degBtn.addEventListener('click', (evt) => { spawnRipple(evt, degBtn); setAngleMode('deg'); });
+  radBtn.addEventListener('click', (evt) => { spawnRipple(evt, radBtn); setAngleMode('rad'); });
 
   clearHistBtn.addEventListener('click', clearHistory);
 

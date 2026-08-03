@@ -6,9 +6,50 @@
     box-sizing: border-box;
   }
 
+  html, body {
+    overflow-x: hidden;
+  }
+
   body {
     background: radial-gradient(circle at top, #241b3f, #0b0b16 70%);
     font-family: 'Segoe UI', system-ui, sans-serif;
+    position: relative;
+  }
+
+  /* Ambient floating glow orbs drifting behind the app */
+  body::before,
+  body::after {
+    content: '';
+    position: fixed;
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.28;
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    background: #a78bfa;
+    top: -110px;
+    left: -110px;
+    animation: floatBlob 13s ease-in-out infinite;
+  }
+  body::after {
+    background: #2dd4bf;
+    bottom: -130px;
+    right: -110px;
+    animation: floatBlob 16s ease-in-out infinite reverse;
+  }
+  @keyframes floatBlob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%      { transform: translate(45px, 35px) scale(1.15); }
+  }
+
+  .app-shell,
+  header {
+    position: relative;
+    z-index: 1;
   }
 
   @keyframes fadeSlideIn {
@@ -16,6 +57,21 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   .app-shell { animation: fadeSlideIn 0.6s ease-out; }
+
+  /* Twinkling sparkle decorations near the title */
+  .sparkle {
+    position: absolute;
+    font-size: 1.1rem;
+    color: #c4b5fd;
+    animation: twinkle 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .sparkle.s2 { animation-delay: 0.9s; color: #5eead4; }
+  .sparkle.s3 { animation-delay: 1.6s; color: #fbbf24; }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.25; transform: scale(0.75) rotate(0deg); }
+    50%      { opacity: 1;    transform: scale(1.15) rotate(20deg); }
+  }
 
   @keyframes glowPulse {
     0%, 100% { box-shadow: 0 0 0px rgba(167, 139, 250, 0.0); }
@@ -30,11 +86,58 @@
   }
   .shake { animation: shake 0.4s ease-in-out; }
 
+  /* Little pop whenever the displayed number changes */
+  @keyframes digitPop {
+    0%   { transform: scale(0.85); opacity: 0.55; }
+    60%  { transform: scale(1.04); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .digit-pop { animation: digitPop 0.18s ease-out; transform-origin: right center; }
+
   .calc-btn {
+    position: relative;
+    overflow: hidden;
     transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
   }
   .calc-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
   .calc-btn:active { transform: scale(0.93); }
+
+  /* Ripple that expands from the click point */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+    animation: rippleAnim 0.5s ease-out;
+  }
+  @keyframes rippleAnim {
+    to { transform: scale(2.6); opacity: 0; }
+  }
+
+  /* Tiny sparkle burst fired from the equals button on a successful calc */
+  .spark-particle {
+    position: fixed;
+    font-size: 13px;
+    color: #5eead4;
+    pointer-events: none;
+    z-index: 50;
+    animation: sparkFly 0.6s ease-out forwards;
+  }
+  @keyframes sparkFly {
+    to { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  @keyframes equalsBurst {
+    0%   { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.55); }
+    100% { box-shadow: 0 0 0 22px rgba(45, 212, 191, 0); }
+  }
+  .equals-burst { animation: equalsBurst 0.5s ease-out; }
+
+  .mode-btn {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.15s ease;
+  }
+  .mode-btn:active { transform: scale(0.95); }
 
   .mode-toggle-thumb {
     transition: transform 0.25s ease;
@@ -47,14 +150,18 @@
     from { opacity: 0; transform: translateX(16px); }
     to   { opacity: 1; transform: translateX(0); }
   }
-  .history-item { animation: slideInRight 0.3s ease-out; }
+  .history-item {
+    animation: slideInRight 0.3s ease-out;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .history-item:hover {
+    transform: translateX(-3px);
+    border-color: rgba(167, 139, 250, 0.4);
+  }
 
   /* ============================================
      MEDIA QUERIES — Responsive Design
      ============================================ */
-  html, body {
-    overflow-x: hidden;
-  }
 
   @media (max-width: 480px) {
     .calc-btn { font-size: 14px; padding: 9px 0; }
@@ -65,4 +172,12 @@
   @media (max-width: 360px) {
     .calc-btn { font-size: 12px; padding: 7px 0; }
     .display-current { font-size: 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
