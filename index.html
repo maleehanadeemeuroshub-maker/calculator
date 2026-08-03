@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculator</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232a2447%22/><text x=%2250%22 y=%2265%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22%2334d399%22 font-family=%22Arial%22>=</text></svg>">
+<title>Calculator Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23f3ecfd%22/><text x=%2250%22 y=%2265%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22%232aab93%22 font-family=%22Arial%22>=</text></svg>">
 
 <!-- Tailwind CSS (utility-first framework) -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -12,150 +12,105 @@
 <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+<body class="min-h-screen flex items-start justify-center p-3 sm:p-4">
 
-<div class="w-full max-w-4xl">
+<div class="w-full max-w-5xl app-shell">
 
   <header class="text-center mb-4 sm:mb-6 relative">
     <span class="sparkle s1" style="left:8%; top:-6px;">✨</span>
     <span class="sparkle s2" style="right:10%; top:2px;">✨</span>
     <span class="sparkle s3" style="right:22%; bottom:-10px;">✦</span>
-    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-wide">Ultimate Calculator</h1>
-    <p class="text-xs sm:text-sm text-slate-400 mt-1">Scientific engine · Quick-calc form · Live history</p>
+    <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-[#3d3557] tracking-wide">Calculator Hub</h1>
+    <p class="text-xs sm:text-sm text-[#a89bc4] mt-1">10 calculators, each its own page — pick a tool to open it</p>
   </header>
 
-  <main class="app-shell flex flex-col md:flex-row gap-5 items-start justify-center">
+  <!-- ============================================
+       HUB — search + tool picker cards
+       ============================================ -->
+  <section>
+    <div class="max-w-xl mx-auto mb-5">
+      <input
+        id="hubSearch"
+        type="text"
+        placeholder="Search a calculator… (e.g. BMI, EMI, age)"
+        class="w-full bg-white/80 text-[#3d3557] rounded-full px-5 py-3 text-sm outline-none border border-[#e8def7] focus:border-violet-400 shadow-lg placeholder:text-[#b3a8ce]"
+      />
+    </div>
 
-    <!-- ============================================
-         CALCULATOR SECTION (Flexbox + Grid)
-         ============================================ -->
-    <section aria-label="Calculator" class="bg-[#1a1530]/90 backdrop-blur rounded-2xl p-3 sm:p-5 shadow-2xl w-full max-w-[380px] mx-auto md:mx-0 md:w-[380px] flex flex-col gap-3 sm:gap-4 border border-white/5">
+    <div id="hubGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-      <!-- Angle mode toggle -->
-      <div class="flex justify-end gap-2">
-        <button id="degBtn" type="button" data-mode="deg"
-          class="mode-btn relative overflow-hidden px-4 py-1.5 rounded-full text-xs font-bold border-2 border-violet-400 bg-violet-500 text-white">DEG</button>
-        <button id="radBtn" type="button" data-mode="rad"
-          class="mode-btn relative overflow-hidden px-4 py-1.5 rounded-full text-xs font-bold border-2 border-white/10 bg-[#0f0c1e] text-slate-500">RAD</button>
-      </div>
+      <a href="basic.html" class="hub-card" data-name="basic simple plus minus arithmetic">
+        <span class="hub-icon bg-amber-500/20 text-amber-600">+&minus;</span>
+        <span class="hub-title">Basic Calculator</span>
+        <span class="hub-desc">Everyday add, subtract, multiply, divide.</span>
+      </a>
 
-      <!-- Display -->
-      <div class="display-glow bg-[#0f0c1e] rounded-xl p-4 text-right border border-white/5 relative">
-        <span id="memoryIndicator" class="absolute top-2 left-3 text-xs font-bold text-fuchsia-400 hidden">M</span>
-        <div id="previousText" class="text-sm text-slate-500 min-h-[18px]"></div>
-        <div id="currentText" class="display-current text-3xl font-semibold text-white break-all">0</div>
-      </div>
+      <a href="scientific.html" class="hub-card" data-name="scientific trig sin cos log advanced engine">
+        <span class="hub-icon bg-violet-500/20 text-violet-600">&sum;</span>
+        <span class="hub-title">Scientific Calculator</span>
+        <span class="hub-desc">Trig, logs, powers, memory &amp; history.</span>
+      </a>
 
-      <!-- Button Grid (CSS Grid, 6 cols, rows auto-grow) -->
-      <div class="grid grid-cols-6 gap-2">
-        <!-- Row 1: scientific -->
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="sin">sin</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="cos">cos</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="tan">tan</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="log">log</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="ln">ln</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="sqrt">&radic;</button>
+      <a href="bmi.html" class="hub-card" data-name="bmi body mass index health weight height">
+        <span class="hub-icon bg-teal-500/20 text-teal-600">&#9878;</span>
+        <span class="hub-title">BMI Calculator</span>
+        <span class="hub-desc">Body mass index from height &amp; weight.</span>
+      </a>
 
-        <!-- Row 2: scientific -->
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="pow2">x&sup2;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-operator="^">x^y</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="fact">x!</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="inv">1/x</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-const="pi">&pi;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-const="e">e</button>
+      <a href="age.html" class="hub-card" data-name="age date of birth years months days">
+        <span class="hub-icon bg-fuchsia-500/20 text-fuchsia-600">&#128198;</span>
+        <span class="hub-title">Age Calculator</span>
+        <span class="hub-desc">Exact age in years, months &amp; days.</span>
+      </a>
 
-        <!-- Row 3: inverse trig + hyperbolic (NEW) -->
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="asin">sin&#8315;&sup1;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="acos">cos&#8315;&sup1;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="atan">tan&#8315;&sup1;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="sinh">sinh</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="cosh">cosh</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="tanh">tanh</button>
+      <a href="percentage.html" class="hub-card" data-name="percentage percent of">
+        <span class="hub-icon bg-rose-500/20 text-rose-600">%</span>
+        <span class="hub-title">Percentage Calculator</span>
+        <span class="hub-desc">Percent of a number, or reverse it.</span>
+      </a>
 
-        <!-- Row 4: mod, exp notation, ans, sign toggle, nth root, random (NEW) -->
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-operator="%">mod</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="exp">EXP</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-action="ans">Ans</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-action="negate">+/&minus;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="nthroot">&#8319;&radic;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="rand">Rnd</button>
+      <a href="discount.html" class="hub-card" data-name="discount sale price off">
+        <span class="hub-icon bg-amber-500/20 text-amber-600">&#127991;</span>
+        <span class="hub-title">Discount Calculator</span>
+        <span class="hub-desc">Sale price after a percentage off.</span>
+      </a>
 
-        <!-- Row 5: memory + copy/paste (NEW) -->
-        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mc">MC</button>
-        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mr">MR</button>
-        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mplus">M+</button>
-        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="mminus">M&minus;</button>
-        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="copy">Copy</button>
-        <button class="calc-btn bg-fuchsia-700 hover:bg-fuchsia-600 text-white rounded-lg text-xs" data-action="paste">Paste</button>
+      <a href="interest.html" class="hub-card" data-name="simple interest principal rate time">
+        <span class="hub-icon bg-teal-500/20 text-teal-600">&#8377;</span>
+        <span class="hub-title">Simple Interest</span>
+        <span class="hub-desc">Interest &amp; total on principal &amp; rate.</span>
+      </a>
 
-        <!-- Row 6: controls -->
-        <button class="calc-btn bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold" data-action="clear">AC</button>
-        <button class="calc-btn bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold" data-action="delete">DEL</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-paren="(">(</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-paren=")">)</button>
-        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="/">&divide;</button>
-        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="*">&times;</button>
+      <a href="emi.html" class="hub-card" data-name="emi loan monthly installment bank">
+        <span class="hub-icon bg-violet-500/20 text-violet-600">&#127974;</span>
+        <span class="hub-title">EMI / Loan Calculator</span>
+        <span class="hub-desc">Monthly installment on a loan.</span>
+      </a>
 
-        <!-- Row 4-5: numbers + equals (equals spans 2 rows, col 6) -->
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="7">7</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="8">8</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="9">9</button>
-        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="-">&minus;</button>
-        <button class="calc-btn bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs" data-func="percent">%</button>
-        <button id="equalsBtn" class="calc-btn row-span-2 bg-teal-400 hover:bg-teal-300 text-slate-900 font-bold rounded-lg text-xl" data-action="equals">=</button>
+      <a href="unit.html" class="hub-card" data-name="unit converter length weight temperature meters kg">
+        <span class="hub-icon bg-fuchsia-500/20 text-fuchsia-600">&#8644;</span>
+        <span class="hub-title">Unit Converter</span>
+        <span class="hub-desc">Length, weight &amp; temperature units.</span>
+      </a>
 
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="4">4</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="5">5</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="6">6</button>
-        <button class="calc-btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold rounded-lg" data-operator="+">+</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number=".">.</button>
+      <a href="datediff.html" class="hub-card" data-name="date difference days between two dates">
+        <span class="hub-icon bg-rose-500/20 text-rose-600">&Delta;d</span>
+        <span class="hub-title">Date Difference</span>
+        <span class="hub-desc">Days between two calendar dates.</span>
+      </a>
 
-        <!-- Row 6: final numbers, 0 spans remaining 3 cols -->
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="1">1</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="2">2</button>
-        <button class="calc-btn bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="3">3</button>
-        <button class="calc-btn col-span-3 bg-[#2a2447] hover:bg-[#352d5c] text-white rounded-lg" data-number="0">0</button>
-      </div>
+    </div>
 
-      <!-- ============================================
-           FORM + VALIDATION
-           ============================================ -->
-      <form id="quickForm" novalidate class="flex flex-col gap-1 pt-2 border-t border-white/10">
-        <label for="quickInput" class="text-xs text-slate-400">Quick calc (type an expression &amp; press Enter)</label>
-        <input
-          id="quickInput"
-          type="text"
-          required
-          pattern="^[0-9+\-*/().%\s]+$"
-          placeholder="e.g. (12+8)/4"
-          class="bg-[#0f0c1e] text-white rounded-lg px-3 py-2 text-base outline-none border border-white/10 focus:border-violet-400"
-        />
-        <span id="formError" class="text-xs text-rose-400 hidden">Only numbers and + − × ÷ % ( ) are allowed.</span>
-      </form>
-    </section>
+    <p id="hubNoMatch" class="text-center text-[#b3a8ce] text-sm mt-6 hidden">No calculator matches that search.</p>
+  </section>
 
-    <!-- ============================================
-         HISTORY SECTION
-         ============================================ -->
-    <section aria-label="Calculation history" class="history-panel bg-[#1a1530]/90 backdrop-blur rounded-2xl p-3 sm:p-5 shadow-2xl w-full max-w-[380px] mx-auto md:mx-0 md:w-[280px] flex flex-col gap-3 max-h-[220px] md:max-h-[520px] border border-white/5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-white font-semibold text-sm">History</h2>
-        <button id="clearHistoryBtn" type="button" class="text-xs text-rose-400 hover:text-rose-300">Clear</button>
-      </div>
-      <ul id="historyList" class="flex flex-col gap-2 overflow-y-auto pr-1 text-sm">
-        <li class="text-slate-500 text-xs italic" id="emptyHistoryMsg">No calculations yet.</li>
-      </ul>
-    </section>
-
-  </main>
-
-  <footer class="text-center mt-6 text-xs text-slate-500">
+  <footer class="text-center mt-6 text-xs text-[#b3a8ce]">
     Built with semantic HTML, Flexbox + Grid, responsive media queries, CSS animations, Tailwind, and vanilla JavaScript.
   </footer>
 
 </div>
 
-<script src="script.js"></script>
+<script src="hub.js"></script>
 
 </body>
 </html>

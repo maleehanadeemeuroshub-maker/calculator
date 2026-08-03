@@ -368,3 +368,349 @@
   updateDisplay();
   renderHistory();
   setAngleMode('deg');
+
+  /* ================================================================
+       VIEW ROUTING — hub search + switching between the 10 tools
+       ================================================================ */
+
+  const calcViews   = document.querySelectorAll('.calc-view');
+  const hubSearch    = document.getElementById('hubSearch');
+  const hubCards     = document.querySelectorAll('.hub-card');
+  const hubNoMatch   = document.getElementById('hubNoMatch');
+
+  function showView(target) {
+    calcViews.forEach(view => view.classList.toggle('active', view.dataset.view === target));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.querySelectorAll('[data-target]').forEach(el => {
+    el.addEventListener('click', () => showView(el.dataset.target));
+  });
+
+  if (hubSearch) {
+    hubSearch.addEventListener('input', () => {
+      const q = hubSearch.value.trim().toLowerCase();
+      let visibleCount = 0;
+      hubCards.forEach(card => {
+        const matches = card.dataset.name.includes(q);
+        card.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+      });
+      hubNoMatch.classList.toggle('hidden', visibleCount !== 0);
+    });
+  }
+
+  /* ================================================================
+       BASIC CALCULATOR — plain +, -, *, /, % arithmetic
+       ================================================================ */
+
+  const basicCurrentText  = document.getElementById('basicCurrentText');
+  const basicPreviousText = document.getElementById('basicPreviousText');
+  let basicExpression = '';
+
+  function updateBasicDisplay() {
+    basicCurrentText.textContent = basicExpression === '' ? '0' : basicExpression;
+  }
+
+  function basicNegate() {
+    const match = basicExpression.match(/(-?\d+\.?\d*)$/);
+    if (!match) return;
+    const numStr = match[1];
+    const before = basicExpression.slice(0, basicExpression.length - numStr.length);
+    const toggled = numStr.startsWith('-') ? numStr.slice(1) : '-' + numStr;
+    basicExpression = before + '(' + toggled + ')';
+  }
+
+  function basicDelete() {
+    if (basicExpression === 'Error') { basicExpression = ''; return; }
+    basicExpression = basicExpression.slice(0, -1);
+  }
+
+  function basicCalculate() {
+    if (basicExpression === '') return;
+    try {
+      const result = Function(`"use strict"; return (${basicExpression})`)();
+      if (!Number.isFinite(result)) throw new Error('Invalid result');
+      const finalResult = parseFloat(result.toFixed(10)).toString();
+      basicPreviousText.textContent = basicExpression + ' =';
+      basicExpression = finalResult;
+    } catch (err) {
+      basicExpression = 'Error';
+    }
+  }
+
+  document.querySelectorAll('[data-view="basic"] .calc-btn').forEach(button => {
+    button.addEventListener('click', (evt) => {
+      spawnRipple(evt, button);
+      const { basicNum, basicOp, basicAction } = button.dataset;
+      if (basicNum !== undefined) basicExpression += basicNum;
+      else if (basicOp !== undefined) basicExpression += basicOp;
+      else if (basicAction === 'clear') { basicExpression = ''; basicPreviousText.textContent = ''; }
+      else if (basicAction === 'delete') basicDelete();
+      else if (basicAction === 'negate') basicNegate();
+      else if (basicAction === 'equals') basicCalculate();
+      updateBasicDisplay();
+    });
+  });
+
+  /* ================================================================
+       Shared helper — render a result box from an array of lines.
+       First line is shown large/bold, the rest as supporting detail.
+       ================================================================ */
+
+  function showResult(boxEl, headline, ...detailLines) {
+    boxEl.innerHTML = `<div class="tool-result-big">${headline}</div>` +
+      detailLines.map(line => `<div>${line}</div>`).join('');
+    boxEl.classList.remove('hidden');
+  }
+
+  /* ================================================================
+       BMI CALCULATOR
+       ================================================================ */
+
+  const bmiCalcBtn = document.getElementById('bmiCalcBtn');
+  if (bmiCalcBtn) {
+    bmiCalcBtn.addEventListener('click', () => {
+      const weight = parseFloat(document.getElementById('bmiWeight').value);
+      const heightCm = parseFloat(document.getElementById('bmiHeight').value);
+      const box = document.getElementById('bmiResult');
+      if (!weight || !heightCm || weight <= 0 || heightCm <= 0) {
+        showResult(box, 'Enter a valid weight and height.');
+        return;
+      }
+      const heightM = heightCm / 100;
+      const bmi = weight / (heightM * heightM);
+      let category;
+      if (bmi < 18.5) category = 'Underweight';
+      else if (bmi < 25) category = 'Normal weight';
+      else if (bmi < 30) category = 'Overweight';
+      else category = 'Obese';
+      showResult(box, `BMI: ${bmi.toFixed(1)}`, `Category: ${category}`);
+    });
+  }
+
+  /* ================================================================
+       AGE CALCULATOR
+       ================================================================ */
+
+  const ageAsOfInput = document.getElementById('ageAsOf');
+  if (ageAsOfInput) ageAsOfInput.valueAsDate = new Date();
+
+  const ageCalcBtn = document.getElementById('ageCalcBtn');
+  if (ageCalcBtn) {
+    ageCalcBtn.addEventListener('click', () => {
+      const dob = document.getElementById('ageDob').value;
+      const asOf = document.getElementById('ageAsOf').value;
+      const box = document.getElementById('ageResult');
+      if (!dob || !asOf) { showResult(box, 'Pick both dates.'); return; }
+      const start = new Date(dob);
+      const end = new Date(asOf);
+      if (end < start) { showResult(box, '"As of" date must be after the date of birth.'); return; }
+
+      let years = end.getFullYear() - start.getFullYear();
+      let months = end.getMonth() - start.getMonth();
+      let days = end.getDate() - start.getDate();
+      if (days < 0) {
+        months -= 1;
+        const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) { months += 12; years -= 1; }
+      const totalDays = Math.round((end - start) / (1000 * 60 * 60 * 24));
+
+      showResult(box, `${years} years, ${months} months, ${days} days`, `Total: ${totalDays.toLocaleString()} days`);
+    });
+  }
+
+  /* ================================================================
+       PERCENTAGE CALCULATOR
+       ================================================================ */
+
+  const pctCalcBtn1 = document.getElementById('pctCalcBtn1');
+  if (pctCalcBtn1) {
+    pctCalcBtn1.addEventListener('click', () => {
+      const x = parseFloat(document.getElementById('pctX1').value);
+      const y = parseFloat(document.getElementById('pctY1').value);
+      const box = document.getElementById('pctResult1');
+      if (!Number.isFinite(x) || !Number.isFinite(y)) { showResult(box, 'Enter both numbers.'); return; }
+      const result = (x / 100) * y;
+      showResult(box, `${x}% of ${y} = ${parseFloat(result.toFixed(6))}`);
+    });
+  }
+
+  const pctCalcBtn2 = document.getElementById('pctCalcBtn2');
+  if (pctCalcBtn2) {
+    pctCalcBtn2.addEventListener('click', () => {
+      const x = parseFloat(document.getElementById('pctX2').value);
+      const y = parseFloat(document.getElementById('pctY2').value);
+      const box = document.getElementById('pctResult2');
+      if (!Number.isFinite(x) || !Number.isFinite(y) || y === 0) { showResult(box, 'Enter both numbers (Y can\'t be 0).'); return; }
+      const result = (x / y) * 100;
+      showResult(box, `${x} is ${parseFloat(result.toFixed(6))}% of ${y}`);
+    });
+  }
+
+  /* ================================================================
+       DISCOUNT CALCULATOR
+       ================================================================ */
+
+  const discCalcBtn = document.getElementById('discCalcBtn');
+  if (discCalcBtn) {
+    discCalcBtn.addEventListener('click', () => {
+      const price = parseFloat(document.getElementById('discPrice').value);
+      const pct = parseFloat(document.getElementById('discPercent').value);
+      const box = document.getElementById('discResult');
+      if (!Number.isFinite(price) || !Number.isFinite(pct) || price < 0 || pct < 0) {
+        showResult(box, 'Enter a valid price and discount %.');
+        return;
+      }
+      const discountAmount = (price * pct) / 100;
+      const finalPrice = price - discountAmount;
+      showResult(box, `Final price: ${finalPrice.toFixed(2)}`, `You save: ${discountAmount.toFixed(2)}`);
+    });
+  }
+
+  /* ================================================================
+       SIMPLE INTEREST CALCULATOR
+       ================================================================ */
+
+  const siCalcBtn = document.getElementById('siCalcBtn');
+  if (siCalcBtn) {
+    siCalcBtn.addEventListener('click', () => {
+      const p = parseFloat(document.getElementById('siPrincipal').value);
+      const r = parseFloat(document.getElementById('siRate').value);
+      const t = parseFloat(document.getElementById('siTime').value);
+      const box = document.getElementById('siResult');
+      if (![p, r, t].every(Number.isFinite) || p < 0 || r < 0 || t < 0) {
+        showResult(box, 'Enter valid principal, rate and time.');
+        return;
+      }
+      const interest = (p * r * t) / 100;
+      const total = p + interest;
+      showResult(box, `Interest: ${interest.toFixed(2)}`, `Total payable: ${total.toFixed(2)}`);
+    });
+  }
+
+  /* ================================================================
+       EMI / LOAN CALCULATOR
+       ================================================================ */
+
+  const emiCalcBtn = document.getElementById('emiCalcBtn');
+  if (emiCalcBtn) {
+    emiCalcBtn.addEventListener('click', () => {
+      const p = parseFloat(document.getElementById('emiPrincipal').value);
+      const annualRate = parseFloat(document.getElementById('emiRate').value);
+      const n = parseFloat(document.getElementById('emiMonths').value);
+      const box = document.getElementById('emiResult');
+      if (![p, annualRate, n].every(Number.isFinite) || p <= 0 || n <= 0 || annualRate < 0) {
+        showResult(box, 'Enter a valid loan amount, rate and tenure.');
+        return;
+      }
+      const r = annualRate / 12 / 100;
+      let emi;
+      if (r === 0) {
+        emi = p / n;
+      } else {
+        emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      }
+      const totalPayment = emi * n;
+      const totalInterest = totalPayment - p;
+      showResult(
+        box,
+        `EMI: ${emi.toFixed(2)} / month`,
+        `Total payment: ${totalPayment.toFixed(2)}`,
+        `Total interest: ${totalInterest.toFixed(2)}`
+      );
+    });
+  }
+
+  /* ================================================================
+       UNIT CONVERTER
+       ================================================================ */
+
+  const UNIT_GROUPS = {
+    length: {
+      label: 'Length',
+      base: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mile: 1609.344, yard: 0.9144, ft: 0.3048, inch: 0.0254 },
+      names: { m: 'Meters', km: 'Kilometers', cm: 'Centimeters', mm: 'Millimeters', mile: 'Miles', yard: 'Yards', ft: 'Feet', inch: 'Inches' }
+    },
+    weight: {
+      label: 'Weight',
+      base: { kg: 1, g: 0.001, mg: 0.000001, lb: 0.45359237, oz: 0.028349523125, ton: 1000 },
+      names: { kg: 'Kilograms', g: 'Grams', mg: 'Milligrams', lb: 'Pounds', oz: 'Ounces', ton: 'Metric tons' }
+    },
+    temperature: {
+      label: 'Temperature',
+      names: { c: 'Celsius', f: 'Fahrenheit', k: 'Kelvin' }
+    }
+  };
+
+  const unitCategorySel = document.getElementById('unitCategory');
+  const unitFromSel = document.getElementById('unitFrom');
+  const unitToSel = document.getElementById('unitTo');
+
+  function populateUnitSelects() {
+    const group = UNIT_GROUPS[unitCategorySel.value];
+    const keys = Object.keys(group.names);
+    const optionsHtml = keys.map(k => `<option value="${k}">${group.names[k]}</option>`).join('');
+    unitFromSel.innerHTML = optionsHtml;
+    unitToSel.innerHTML = optionsHtml;
+    if (keys.length > 1) unitToSel.selectedIndex = 1;
+  }
+
+  function convertTemperature(value, from, to) {
+    let celsius;
+    if (from === 'c') celsius = value;
+    else if (from === 'f') celsius = (value - 32) * (5 / 9);
+    else celsius = value - 273.15;
+
+    if (to === 'c') return celsius;
+    if (to === 'f') return celsius * (9 / 5) + 32;
+    return celsius + 273.15;
+  }
+
+  if (unitCategorySel) {
+    unitCategorySel.addEventListener('change', populateUnitSelects);
+    populateUnitSelects();
+
+    document.getElementById('unitCalcBtn').addEventListener('click', () => {
+      const value = parseFloat(document.getElementById('unitValue').value);
+      const box = document.getElementById('unitResult');
+      const category = unitCategorySel.value;
+      const from = unitFromSel.value;
+      const to = unitToSel.value;
+      if (!Number.isFinite(value)) { showResult(box, 'Enter a value to convert.'); return; }
+
+      let result;
+      if (category === 'temperature') {
+        result = convertTemperature(value, from, to);
+      } else {
+        const group = UNIT_GROUPS[category];
+        result = (value * group.base[from]) / group.base[to];
+      }
+      const rounded = parseFloat(result.toFixed(6));
+      showResult(box, `${rounded.toLocaleString()} ${to}`, `${value} ${from} = ${rounded.toLocaleString()} ${to}`);
+    });
+  }
+
+  /* ================================================================
+       DATE DIFFERENCE CALCULATOR
+       ================================================================ */
+
+  const ddCalcBtn = document.getElementById('ddCalcBtn');
+  if (ddCalcBtn) {
+    ddCalcBtn.addEventListener('click', () => {
+      const startVal = document.getElementById('ddStart').value;
+      const endVal = document.getElementById('ddEnd').value;
+      const box = document.getElementById('ddResult');
+      if (!startVal || !endVal) { showResult(box, 'Pick both dates.'); return; }
+      const start = new Date(startVal);
+      const end = new Date(endVal);
+      const diffMs = end - start;
+      const totalDays = Math.round(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
+      const weeks = Math.floor(totalDays / 7);
+      const remDays = totalDays % 7;
+      const direction = diffMs < 0 ? ' (end date is before start date)' : '';
+      showResult(box, `${totalDays.toLocaleString()} days${direction}`, `${weeks} weeks and ${remDays} days`);
+    });
+  }
